@@ -34,7 +34,7 @@ def dmp_experiment(args):
         torch.backends.cudnn.deterministic = True
 
     torch.set_num_threads(1)
-    device = torch.device("cuda:0" if args.cuda else "cpu")
+    device = torch.device("cuda" if args.cuda else "cpu")
 
     env_kwargs = dict(timestep=args.timestep, reward_delay=args.T)
     print("Building environments")

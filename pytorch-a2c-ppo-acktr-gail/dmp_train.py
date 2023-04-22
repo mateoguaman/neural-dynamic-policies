@@ -48,7 +48,8 @@ def train(actor_critic, agent, rollouts, envs, test_envs, args):
 
     rollout_infos = dict(final_distance=[], final_success_rate=[])
     args.save_interval = args.log_interval
-    for j in tqdm(range(num_updates), desc="Number of updates/Epochs"):
+    for j in tqdm(range(num_updates)):
+        print(f"Update step: {j}")
         if args.use_linear_lr_decay:
             utils.update_linear_schedule(
                 agent.optimizer,
