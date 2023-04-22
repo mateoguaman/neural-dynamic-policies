@@ -67,8 +67,7 @@ class NdpCnn(nn.Module):
         self.hidden_activation = hidden_activation
         in_size = input_size
         self.pt = CNN()
-        breakpoint()
-        self.pt.load_state_dict(torch.load(pt))
+        # self.pt.load_state_dict(torch.load(pt))
         self.convSize = 4 * 4 * 50
         self.imageSize = 28
         self.N = N
@@ -182,7 +181,7 @@ def main():
             loss.backward()
             optimizer.step()
         torch.save(ndpn.state_dict(), model_save_path + "/model.pt")
-        if epoch % 10 == 0:
+        if epoch % 10 == 0 and epoch != 0:
             print("Running testing")
             x_test = X_test[np.arange(100)]
             y_test = Y_test[np.arange(100)]
