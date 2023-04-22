@@ -37,6 +37,21 @@ This is a [PyTorch](https://pytorch.org/) based implementation for our [NeurIPS 
   ```
 
 
+# New instructions
+
+Install the following
+
+```
+pip install scikit-learn numpy path theano cached_property metaworld baselines
+
+sudo apt install patchelf
+cd rllab; pip install -e .; cd -
+cd dnc; pip install -e .; cd -
+pip install git+https://github.com/rlworkgroup/metaworld.git@master#egg=metaworld
+pip install git+https://github.com/openai/baselines@ea25b9e8
+
+```
+
 2. Training imitation learning
   ```Shell
   cd neural-dynamic-polices

@@ -1,8 +1,5 @@
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+import argparse
+
 from a2c_ppo_acktr.model import DMPNet
 import matplotlib
 matplotlib.use('Agg')
@@ -12,8 +9,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from a2c_ppo_acktr.distributions import Bernoulli, Categorical, DiagGaussian, DiagGaussianDist
+import torch.optim as optim
+# from a2c_ppo_acktr.distributions import Bernoulli, Categorical, DiagGaussian, DiagGaussianDist
 from a2c_ppo_acktr.utils import init
 from dmp.utils.dmp_layer import DMPIntegrator, DMPParameters
 from a2c_ppo_acktr import pytorch_util as ptu
@@ -25,6 +22,7 @@ import sys
 import argparse
 from datetime import datetime
 from dmp.utils.mnist_cnn import CNN
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', type=str, default='ndp-il')
@@ -45,6 +43,7 @@ class NdpCnn(nn.Module):
             N = 5,
             T = 10,
             l = 10,
+            input_size=None,
             *args,
             **kwargs
     ):
@@ -69,7 +68,7 @@ class NdpCnn(nn.Module):
         self.hidden_activation = hidden_activation
         in_size = input_size
         self.pt = CNN()
-        self.pt.load_state_dict(torch.load(pt))
+        # self.pt.load_state_dict(torch.load(pt))
         self.convSize = 4*4*50
         self.imageSize = 28
         self.N = N
@@ -105,84 +104,111 @@ class NdpCnn(nn.Module):
         return y.transpose(2, 1)
 
 
+def main():
+    assert torch.cuda.is_available(), breakpoint()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    print("Loading data")
+    data_path = './data/arr.m'
+    images, outputs, scale, or_tr = MatLoader.load_data(data_path, load_original_trajectories=True)
+    images = np.array([cv2.resize(img, (28, 28)) for img in images])/255.0
+    input_size = images.shape[1] * images.shape[2]
+    print("Data loaded")
 
-
-data_path = './dmp/data/40x40-smnist.mat'
-images, outputs, scale, or_tr = MatLoader.load_data(data_path, load_original_trajectories=True)
-images = np.array([cv2.resize(img, (28, 28)) for img in images])/255.0
-input_size = images.shape[1] * images.shape[2]
-
-inds = np.arange(12000)
-np.random.shuffle(inds)
-test_inds = inds[10000:]
-train_inds = inds[:10000]
-X = torch.Tensor(images[:12000]).float()
-Y = torch.Tensor(np.array(or_tr)[:, :, :2]).float()[:12000]
-
-
-time = str(datetime.now())
-time = time.replace(' ', '_')
-time = time.replace(':', '_')
-time = time.replace('-', '_')
-time = time.replace('.', '_')
-model_save_path = './dmp/data/' + args.name + '_' + time
-os.mkdir(model_save_path)
-k = 1
-T = 300/k
-N = 30
-learning_rate = 1e-3
-Y = Y[:, ::k, :]
-
-
-X_train = X[train_inds]
-Y_train = Y[train_inds]
-X_test = X[test_inds]
-Y_test = Y[test_inds]
-
-
-
-num_epochs = 71
-batch_size = 100
-ndpn = NdpCnn(T=T,l=1, N=N, state_index=np.arange(2))
-optimizer = torch.optim.Adam(ndpn.parameters(), lr=learning_rate)
-for epoch in range(num_epochs):
-    inds = np.arange(X_train.shape[0])
+    print("Slicing data")
+    inds = np.arange(12000)
     np.random.shuffle(inds)
-    for ind in np.split(inds, len(inds)//batch_size):
-        optimizer.zero_grad()
-        y_h = ndpn(X_train[ind], Y_train[ind, 0, :])
-        loss = torch.mean((y_h - Y_train[ind])**2)
-        loss.backward()
-        optimizer.step()
-    torch.save(ndpn.state_dict(), model_save_path + '/model.pt')
-    if epoch % 20 == 0:
-        x_test = X_test[np.arange(100)]
-        y_test = Y_test[np.arange(100)]
-        y_htest = ndpn(x_test, y_test[:, 0, :])
-        for j in range(18):
-            plt.figure(figsize=(8, 8))
-            plt.plot(0.667*y_h[j, :, 0].detach().cpu().numpy(), -0.667*y_h[j, :, 1].detach().cpu().numpy(), c='r', linewidth=5)
-            plt.axis('off')
-            plt.savefig(model_save_path + '/train_img_' + str(j) + '.png')
+    test_inds = inds[10000:]
+    train_inds = inds[:10000]
+    X = torch.Tensor(images[:12000]).float()
+    Y = torch.Tensor(np.array(or_tr)[:, :, :2]).float()[:12000]
+    print("Slicing done")
 
-            plt.figure(figsize=(8, 8))
-            img = X_train[ind][j].cpu().numpy()*255
-            img = np.asarray(img*255, dtype=np.uint8)
-            plt.imshow(img, cmap='gray')
-            plt.axis('off')
-            plt.savefig(model_save_path + '/ground_train_img_' + str(j) + '.png', bbox_inches='tight', pad_inches=0)
+    print("Setting hparams")
+    time = str(datetime.now())
+    time = time.replace(' ', '_')
+    time = time.replace(':', '_')
+    time = time.replace('-', '_')
+    time = time.replace('.', '_')
+    model_save_path = './dmp/data/' + args.name + '_' + time
+    os.makedirs(model_save_path)
+    k = 1
+    T = 300/k
+    N = 30
+    learning_rate = 1e-3
+    Y = Y[:, ::k, :]
 
-            plt.figure(figsize=(8, 8))
-            plt.plot(0.667*y_htest[j, :, 0].detach().cpu().numpy(), -0.667*y_htest[j, :, 1].detach().cpu().numpy(), c='r', linewidth=5)
-            plt.axis('off')
-            plt.savefig(model_save_path + '/test_img_' + str(j) + '.png', bbox_inches='tight', pad_inches=0)
+    print("Splitting data into train and test")
+    X_train = X[train_inds]
+    Y_train = Y[train_inds]
+    X_test = X[test_inds]
+    Y_test = Y[test_inds]
+    print("Splitting done")
 
-            plt.figure(figsize=(8, 8))
-            img = X_test[j].cpu().numpy()*255
-            img = np.asarray(img*255, dtype=np.uint8)
-            plt.imshow(img, cmap='gray')
-            plt.axis('off')
-            plt.savefig(model_save_path + '/ground_test_img_' + str(j) + '.png', bbox_inches='tight', pad_inches=0)
-        test = ((y_htest - y_test)**2).mean(1).mean(1)
-        print('Epoch: ' + str(epoch) + ', Test Error: ' + str(test.mean().item()))
+    print("Moving data to GPU")
+    X_train = X_train.to(device)
+    Y_train = Y_train.to(device)
+    X_test = X_test.to(device)
+    Y_test = Y_test.to(device)
+
+    print("Setting network")
+    num_epochs = 71
+    batch_size = 100
+    ndpn = NdpCnn(T=T,l=1, N=N, state_index=np.arange(2), input_size=input_size)
+    ndpn = ndpn.to(device)
+    print("Network defined")
+
+    print("Setting optimizer")
+    optimizer = torch.optim.Adam(ndpn.parameters(), lr=learning_rate)
+    print("Optimizer set")
+
+    print("Starting training")
+    for epoch in tqdm(range(num_epochs)):
+        inds = np.arange(X_train.shape[0])
+        np.random.shuffle(inds)
+        for ind in np.split(inds, len(inds)//batch_size):
+            optimizer.zero_grad()
+            y_h = ndpn(X_train[ind], Y_train[ind, 0, :])
+            loss = torch.mean((y_h - Y_train[ind])**2)
+            loss.backward()
+            optimizer.step()
+        torch.save(ndpn.state_dict(), model_save_path + '/model.pt')
+        if epoch % 2 == 0:
+            print("Running testing")
+            x_test = X_test[np.arange(100)]
+            y_test = Y_test[np.arange(100)]
+            y_htest = ndpn(x_test, y_test[:, 0, :])
+            for j in tqdm(range(18)):
+                plt.figure(figsize=(8, 8))
+                plt.plot(0.667*y_h[j, :, 0].detach().cpu().numpy(), -0.667*y_h[j, :, 1].detach().cpu().numpy(), c='r', linewidth=5)
+                plt.axis('off')
+                plt.savefig(model_save_path + '/train_img_' + str(j) + '.png')
+                plt.close()
+
+                plt.figure(figsize=(8, 8))
+                img = X_train[ind][j].cpu().numpy()*255
+                img = np.asarray(img*255, dtype=np.uint8)
+                plt.imshow(img, cmap='gray')
+                plt.axis('off')
+                plt.savefig(model_save_path + '/ground_train_img_' + str(j) + '.png', bbox_inches='tight', pad_inches=0)
+                plt.close()
+
+                plt.figure(figsize=(8, 8))
+                plt.plot(0.667*y_htest[j, :, 0].detach().cpu().numpy(), -0.667*y_htest[j, :, 1].detach().cpu().numpy(), c='r', linewidth=5)
+                plt.axis('off')
+                plt.savefig(model_save_path + '/test_img_' + str(j) + '.png', bbox_inches='tight', pad_inches=0)
+                plt.close()
+
+                plt.figure(figsize=(8, 8))
+                img = X_test[j].cpu().numpy()*255
+                img = np.asarray(img*255, dtype=np.uint8)
+                plt.imshow(img, cmap='gray')
+                plt.axis('off')
+                plt.savefig(model_save_path + '/ground_test_img_' + str(j) + '.png', bbox_inches='tight', pad_inches=0)
+                plt.close()
+            test = ((y_htest - y_test)**2).mean(1).mean(1)
+            print('Epoch: ' + str(epoch) + ', Test Error: ' + str(test.mean().item()))
+
+
+if __name__ == "__main__":
+    main()

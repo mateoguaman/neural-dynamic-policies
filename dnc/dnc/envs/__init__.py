@@ -1,9 +1,9 @@
 from dnc.envs.picker import *
 from dnc.envs.throw import *
-from metaworld.envs.mujoco.sawyer_xyz.sawyer_reach_push_pick_place import *
-from metaworld.envs.mujoco.sawyer_xyz.sawyer_soccer import *
-from metaworld.envs.mujoco.sawyer_xyz.sawyer_door import *
-from metaworld.envs.mujoco.sawyer_xyz.sawyer_faucet_open import *
+from metaworld.envs.mujoco.sawyer_xyz.v1.sawyer_reach_push_pick_place import *
+from metaworld.envs.mujoco.sawyer_xyz.v1.sawyer_soccer import *
+from metaworld.envs.mujoco.sawyer_xyz.v1.sawyer_door import *
+from metaworld.envs.mujoco.sawyer_xyz.v1.sawyer_faucet_open import *
 from dnc.envs.base import create_env_partitions
 
 
