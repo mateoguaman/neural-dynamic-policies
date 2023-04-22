@@ -47,9 +47,11 @@ pip install scikit-learn numpy path theano cached_property metaworld baselines
 sudo apt install patchelf
 cd rllab; pip install -e .; cd -
 cd dnc; pip install -e .; cd -
+cd pytorch-a2c-ppo-acktr-gail; pip install -e .; cd -
+cd dmp; pip install -e .; cd -
 pip install git+https://github.com/rlworkgroup/metaworld.git@master#egg=metaworld
 pip install git+https://github.com/openai/baselines@ea25b9e8
-
+pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 2. Training imitation learning
