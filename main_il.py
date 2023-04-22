@@ -34,7 +34,7 @@ class NdpCnn(nn.Module):
         init_w=3e-3,
         layer_sizes=[784, 200, 100],
         hidden_activation=F.relu,
-        pt="./dmp/data/mnist_cnn.pt",
+        pt="./data/mnist_cnn.pt",
         output_activation=None,
         hidden_init=ptu.fanin_init,
         b_init_value=0.1,
@@ -67,7 +67,7 @@ class NdpCnn(nn.Module):
         self.hidden_activation = hidden_activation
         in_size = input_size
         self.pt = CNN()
-        # self.pt.load_state_dict(torch.load(pt))
+        self.pt.load_state_dict(torch.load(pt))
         self.convSize = 4 * 4 * 50
         self.imageSize = 28
         self.N = N
