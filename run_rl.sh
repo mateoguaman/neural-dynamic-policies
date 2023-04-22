@@ -18,21 +18,21 @@ if [ "$ENV_NAME" = "throw" ] || [ "$ENV_NAME" = "pick" ]; then
 fi
 
 if [ "$TYPE" = "dmp" ] || [ "$TYPE" = "ppo-multi" ] && [ "$ENV_NAME" = "throw" ]; then
-    python ./main_rl.py --env-name $ENV_NAME  --type $TYPE --seed $SEED --expID $EXP_ID --reward-delay 5 --T 5 --N 5 --a_z 5&
+    python ./main_rl.py --env-name $ENV_NAME  --type $TYPE --seed $SEED --run_id $EXP_ID --reward-delay 5 --T 5 --N 5 --a_z 5 --num-processes $num_processes
 fi
 if [ "$TYPE" = "dmp" ] || [ "$TYPE" = "ppo-multi" ] && [ "$ENV_NAME" = "push" ]; then
-    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --expID $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 10&
+    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --run_id $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 10 --num-processes $num_processes
 fi
 if [ "$TYPE" = "dmp" ] || [ "$TYPE" = "ppo-multi" ] && [ "$ENV_NAME" = "push" ]; then
-    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --expID $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 5&
+    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --run_id $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 5 --num-processes $num_processes
 fi
 if [ "$TYPE" = "dmp" ] || [ "$TYPE" = "ppo-multi" ] && [ "$ENV_NAME" = "soccer" ]; then
-    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --expID $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 15&
+    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --run_id $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 15 --num-processes $num_processes
 fi
 if [ "$TYPE" = "dmp" ] || [ "$TYPE" = "ppo-multi" ] && [ "$ENV_NAME" = "faucet" ]; then
-    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --expID $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 5&
+    python ./main_rl.py --env-name=$ENV_NAME  --type $TYPE --seed $SEED --run_id $EXP_ID --reward-delay 5 --T 5 --N 6 --a_z 5 --num-processes $num_processes
 fi
 if [ "$TYPE" = "ppo" ]; then
-    python ./main_rl.py --env-name=$ENV_NAME  --type=$TYPE --seed=$SEED --expID=$EXP_ID&
+    python ./main_rl.py --env-name=$ENV_NAME  --type=$TYPE --seed=$SEED --run_id=$EXP_ID
 fi
 wait $!

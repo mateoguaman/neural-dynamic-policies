@@ -17,7 +17,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from a2c_ppo_acktr import pytorch_util as ptu
-
 # from a2c_ppo_acktr.distributions import Bernoulli, Categorical, DiagGaussian, DiagGaussianDist
 from a2c_ppo_acktr.model import DMPNet
 from a2c_ppo_acktr.utils import init
